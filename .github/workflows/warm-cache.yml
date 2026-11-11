@@ -1,0 +1,39 @@
+name: Warm LiteSpeed cache (giorgostsamis.gr)
+
+on:
+  schedule:
+    # Κάθε 6 ώρες στο λεπτό 17 (UTC) = 02:17, 08:17, 14:17, 20:17 ώρα Ελλάδας (χειμώνας)
+    # Κάθε εκτέλεση παίρνει το επόμενο από τα 12 κομμάτια προϊόντων -> πλήρης κύκλος σε 3 ημέρες
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "desktop ή mobile (κενό = και τα δύο)"
+        required: false
+        default: ""
+      limit:
+        description: "Μέγιστος αριθμός URL (0 = όλα) — π.χ. 20 για δοκιμή"
+        required: false
+        default: "0"
+
+concurrency:
+  group: warm-cache
+  cancel-in-progress: false
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Warm cache
+        env:
+          ONLY: ${{ github.event.inputs.only }}
+          LIMIT: ${{ github.event.inputs.limit }}
+        run: |
+          ARGS="--delay 1.5 --max-minutes 150 --rotate 12 --interval-hours 6 --limit ${LIMIT:-0}"
+          if [ -n "$ONLY" ]; then ARGS="$ARGS --only $ONLY"; fi
+          python3 warm_cache.py $ARGS
