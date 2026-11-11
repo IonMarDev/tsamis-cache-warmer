@@ -3,7 +3,7 @@ name: Warm LiteSpeed cache (giorgostsamis.gr)
 on:
   schedule:
     # Κάθε 6 ώρες στο λεπτό 17 (UTC) = 02:17, 08:17, 14:17, 20:17 ώρα Ελλάδας (χειμώνας)
-    # Κάθε εκτέλεση παίρνει το επόμενο από τα 12 κομμάτια προϊόντων -> πλήρης κύκλος σε 3 ημέρες
+    # Κάθε εκτέλεση παίρνει το επόμενο από τα 16 κομμάτια προϊόντων -> πλήρης κύκλος σε 4 ημέρες
     - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
@@ -34,6 +34,6 @@ jobs:
           ONLY: ${{ github.event.inputs.only }}
           LIMIT: ${{ github.event.inputs.limit }}
         run: |
-          ARGS="--delay 1.5 --max-minutes 150 --rotate 12 --interval-hours 6 --limit ${LIMIT:-0}"
+          ARGS="--delay 1.5 --max-minutes 150 --rotate 16 --interval-hours 6 --limit ${LIMIT:-0}"
           if [ -n "$ONLY" ]; then ARGS="$ARGS --only $ONLY"; fi
           python3 warm_cache.py $ARGS
