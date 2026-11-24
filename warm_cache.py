@@ -64,9 +64,21 @@ def fetch(url, ua, timeout=60):
 PRODUCT_SITEMAP = re.compile(r"/product-sitemap\d*\.xml", re.I)
 
 
+def fetch_sitemap(url, tries=4, wait=60):
+    """Sitemaps are generated on the fly and sometimes return 5xx; retry before giving up."""
+    for attempt in range(1, tries + 1):
+        try:
+            return fetch(url, UA["desktop"])[3]
+        except Exception as e:
+            if attempt == tries:
+                raise
+            print(f"! sitemap {url} failed ({e}), retry {attempt}/{tries - 1} in {wait}s", flush=True)
+            time.sleep(wait)
+
+
 def sitemap_urls(index_url):
     """Returns a list of (is_product, url), priority sitemaps first."""
-    _, _, _, body = fetch(index_url, UA["desktop"])
+    body = fetch_sitemap(index_url)
     if index_url.endswith(".gz"):
         body = gzip.decompress(body)
     root = ET.fromstring(body)
